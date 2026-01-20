@@ -13,7 +13,7 @@ java SquareTiling
 ```
 
 # Screenshot
-tbd
+![Screenshot](images/screenshot.png)
 
 # TODO
 - build custom tiles
