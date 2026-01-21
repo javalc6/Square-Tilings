@@ -25,8 +25,10 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.geom.Arc2D;
 import java.awt.geom.Path2D;
 import java.awt.geom.Rectangle2D;
+import java.awt.geom.RoundRectangle2D;
 import java.awt.image.BufferedImage;
 import javax.imageio.ImageIO;
 import java.io.File;
@@ -53,6 +55,7 @@ public class SquareTiling extends JFrame {
         IPATTERN3("Eightfold Islamic Star"),
         CROSSED("Crossed Square"),
         INTERLACED("Interlaced Circles"),
+        INTERLOCK("Interlocking Squares"),
         OCTAGRAM1("Large Octagram"),
         OCTAGRAM2("Narrow Octagram"),
         OCTAGON("Octagon & Rectangles"),
@@ -368,6 +371,7 @@ public class SquareTiling extends JFrame {
             case IPATTERN3: drawIslamicStarTile3(g2d, x, y, size); break;
             case CROSSED: drawCrossedTile(g2d, x, y, size); break;
             case INTERLACED: drawInterlacedTile(g2d, x, y, size); break;
+            case INTERLOCK: drawInterlockingTile(g2d, x, y, size); break;
             case OCTAGRAM1: drawOctagramTile(g2d, x, y, 0.384, size); break;
             case OCTAGRAM2: drawOctagramTile(g2d, x, y, 0.27, size); break;
             case OCTAGON: drawOctagonTile(g2d, x, y, size); break;
@@ -384,8 +388,8 @@ public class SquareTiling extends JFrame {
 
         g2d.setColor(colorUserGrid);
         g2d.setStroke(new BasicStroke(1f));
-		g2d.drawLine(x, y, x, y + size);
-		g2d.drawLine(x, y, x + size, y);
+        g2d.drawLine(x, y, x, y + size);
+        g2d.drawLine(x, y, x + size, y);
 
         for (DrawingAction action : actionHistory)
             action.draw(g2d, size, tileSize);
@@ -534,6 +538,71 @@ public class SquareTiling extends JFrame {
         g2d.setStroke(new BasicStroke(2));
         g2d.drawLine(quarter, 0, quarter, size);
         g2d.drawLine(0, quarter, size, quarter);
+    }
+
+    private void drawInterlockingTile(Graphics2D g2d, int x, int y, int size) {
+        g2d.setColor(colorC);
+        g2d.fillRect(x, y, x + size, y + size);
+
+        int stroke = size / 16;
+        int stroke2 = stroke * 2;
+        int stroke3 = stroke * 3;
+        int dim = size - stroke2 * 2;
+
+        g2d.setStroke(new BasicStroke(stroke));
+
+//vertical lines
+        g2d.setColor(colorA);
+        int x1 = dim / 2 + stroke;
+        int x2 = dim / 2 + stroke3;
+        g2d.drawLine(x1, 0, x1, size);
+        g2d.drawLine(x2, 0, x2, size);
+//horizontal lines
+        g2d.setColor(colorD);
+        int y1 = dim / 2 + stroke;
+        int y2 = dim / 2 + stroke3;
+        g2d.drawLine(0, y1, size, y1);
+        g2d.drawLine(0, y2, size, y2);
+
+        int arc = dim / 3;
+//rounded square
+        g2d.setColor(Color.RED);
+        RoundRectangle2D loop = new RoundRectangle2D.Double(stroke2, stroke2, dim, dim, arc, arc);
+        g2d.draw(loop);
+
+        int r = arc / 2;
+//bottom-left arc
+        g2d.setColor(colorB);
+        Arc2D quarter = new Arc2D.Double(stroke3 - r - 1, dim - r + stroke, arc, arc, 90, -90, Arc2D.OPEN);
+        g2d.draw(quarter);
+//bottom-right arc
+        quarter = new Arc2D.Double(stroke - r + dim, dim - r + stroke, arc, arc, 180, -90, Arc2D.OPEN);
+        g2d.draw(quarter);
+//top-right arc
+        quarter = new Arc2D.Double(stroke - r + dim, stroke3 - r, arc, arc, 270, -90, Arc2D.OPEN);
+        g2d.draw(quarter);
+//top-left arc
+        quarter = new Arc2D.Double(stroke3 - r, stroke3 - r, arc, arc, 0, -90, Arc2D.OPEN);
+        g2d.draw(quarter);
+//patches
+        g2d.drawLine(0, stroke3 + r, stroke2 + 1, stroke3 + r);
+        g2d.drawLine(0, dim - r + stroke, stroke, dim - r + stroke);
+        g2d.drawLine(stroke3 + r, 0, stroke3 + r, stroke);
+        g2d.drawLine(stroke3 + r, dim + stroke2, stroke3 + r, size);
+        g2d.drawLine(dim - stroke, 0, dim - stroke, stroke2 + 1);
+        g2d.drawLine(dim - stroke, dim + stroke3, dim - stroke, size);
+        g2d.drawLine(dim + stroke3, stroke3 + r, size, stroke3 + r);
+        g2d.drawLine(size, dim - r + stroke, dim + stroke2, dim - r + stroke);
+
+        g2d.setColor(colorA);
+        g2d.drawLine(x1, stroke, x1, stroke3);
+        g2d.drawLine(x1, y2, x1, y2 + stroke);
+        g2d.drawLine(x2, dim + stroke, x2, dim + stroke3);
+        g2d.drawLine(x2, y1, x2, y1 + stroke);
+
+        g2d.setColor(colorD);
+        g2d.drawLine(dim, y1, dim + stroke3, y1);
+        g2d.drawLine(stroke, y2, stroke3, y2);
     }
 
     private void drawSquaresTile(Graphics2D g2d, int x, int y, int size) {
