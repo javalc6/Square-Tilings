@@ -17,7 +17,15 @@
         </javac>
     </target>
 
-    <target name="run" depends="compile">
+    <target name="copy-resources" depends="compile">
+        <copy todir="${build.dir}">
+            <fileset dir="${src.dir}">
+                <include name="**/*.png"/>
+            </fileset>
+        </copy>
+    </target>
+
+    <target name="run" depends="copy-resources">
         <java classname="SquareTiling" fork="true">
             <classpath>
                 <pathelement path="${build.dir}"/>
