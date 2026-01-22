@@ -90,6 +90,7 @@ public class SquareTiling extends JFrame {
     private final JSlider sizeSlider;
 
     private boolean isFillMode = false;
+    private Color boundaryColor = Color.BLACK;
 
     // User Drawing Data
     private final List<DrawingAction> actionHistory = new ArrayList<>();
@@ -349,7 +350,7 @@ public class SquareTiling extends JFrame {
                     if (currentType == TileType.USER_MODE && !isFillMode && dragStart != null) {
                         Point p = new Point(e.getX() % tileSize, e.getY() % tileSize);
                         if (p.distance(dragStart) > 2) {
-                            actionHistory.add(new LineAction(dragStart, p, colorB));
+                            actionHistory.add(new LineAction(dragStart, p, boundaryColor));
                             clearCache();
                         }
                         dragStart = null; currentEndPoint = null;
@@ -419,7 +420,7 @@ public class SquareTiling extends JFrame {
 
     private void floodFill(BufferedImage img, BufferedImage mask, int x, int y, Color fillCol) {
         int fillRGB = fillCol.getRGB();
-        int boundaryRGB = colorB.getRGB();
+        int boundaryRGB = boundaryColor.getRGB();
         if (mask.getRGB(x, y) == boundaryRGB) return;
 
         Queue<Point> q = new LinkedList<>();
