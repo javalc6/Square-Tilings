@@ -1,10 +1,11 @@
 # Introduction
-This Swing application provides an interactive graphical interface for visualizing periodic tilings composed of repeated square-based geometric patterns. 
+The *SquareTiling* application provides an interactive graphical interface for visualizing periodic tilings composed of repeated square-based geometric patterns. 
 
 *SquareTiling* includes tiles like Greek key, Islamic stars, octagons, checkers, tartan and interlaced motifs, which can be tiled across the application panel in real time. 
 
 You can adjust tile size, choose from four customizable colors, preview individual tiles and export the resulting tiling as a PNG image. 
-Create your own tile using *user mode* that allows you to draw lines, fill colors, to try your own tilings.
+
+Create your own tile using **user mode** that allows you to draw lines, fill colors, to build and visualize your own tilings in real time.
 
 # How to run
 Run 'ant' command to compile and run the *SquareTiling* application.
@@ -13,5 +14,5 @@ Run 'ant' command to compile and run the *SquareTiling* application.
 Islamic tile example:
 ![Screenshot](images/screenshot.png)
 
-User tile example:
+**User mode** example:
 ![Screenshot](images/user_mode.png)
