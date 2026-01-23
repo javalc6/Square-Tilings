@@ -1,11 +1,11 @@
 # Introduction
-The *SquareTiling* application provides an interactive graphical interface for visualizing periodic tilings composed of repeated square-based geometric patterns. 
+The *SquareTiling* application provides an interactive graphical interface to visualize periodic tilings composed of repeated square-based geometric patterns. 
 
 *SquareTiling* includes tiles like Greek key, Islamic stars, octagons, checkers, fractals, Truchet patterns, tartan and interlaced motifs, which can be tiled across the application panel in real time. 
 
-You can adjust tile size, choose from four customizable colors, preview individual tiles and export the resulting tiling as a PNG image. 
+You can adjust tile size, choose from four customizable colors, preview individual tiles, export the resulting tiling as a PNG image and view the gallery of implemented tiles. All tiles are implemented using standard Java 2D classes.
 
-Create your own tile using **user mode** that allows you to draw lines, fill colors, to build and visualize your own tilings in real time.
+Create your own tile using **user mode** that allows you to draw lines, fill colors, build and visualize your own tilings in real time.
 
 # How to run
 Run 'ant' command to compile and run the *SquareTiling* application.
