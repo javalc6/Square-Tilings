@@ -12,12 +12,15 @@ Run 'ant' command to compile and run the *SquareTiling* application.
 
 # Screenshot
 Islamic tile example:
+
 ![Screenshot](images/screenshot.png)
 
 **User mode** example:
+
 ![Screenshot](images/user_mode.png)
 
 **Tiles gallery**:
+
 ![Screenshot](images/gallery.png)
 
 # Todo
