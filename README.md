@@ -47,7 +47,7 @@ The following tilings are available:
 
 
 # Usage
-Methods described in previous sections requires Java AWT. These methods are static and can be invokes as in the following example:
+Methods described in previous sections requires Java AWT. These methods are static and can be invoked as in the following example:
 ```java
 Tiles.drawGreekTile(g2d, colors, x, y, size);
 ```
