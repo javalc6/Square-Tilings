@@ -56,8 +56,9 @@ public class SquareTiling extends JFrame {
         INTERLOCK("Interlocking Squares"),
         OCTAGRAM1("Large Octagram"),
         OCTAGRAM2("Narrow Octagram"),
-        OCTAGON("Octagon & Rectangles"),
-        SQUARES("Squares and rhombus"),
+        OCTAGON("Octagons & Squares"),
+        OCTAGON2("Octagon & Rhombus"),
+        SQUARES("Squares and Rhombus"),
         TARTAN("Tartan"),
         CROSSED("Crossed Square"),
         INTERLACED("Interlaced Circles"),
@@ -68,6 +69,7 @@ public class SquareTiling extends JFrame {
         WANG("Wang tiling"),
         BLCKFRCTL("Block fractal"),
         HLBRTFRCTL("Hilbert fractal"),
+        GRIDSQRCIRCLE("Grid Squares & Circles"),
         CHECKERED("Checkered");
 
         final String title;
@@ -84,7 +86,11 @@ public class SquareTiling extends JFrame {
     private Color fillColor = colors[0];
     private final Color colorUserGrid = Color.GRAY;
 
+	enum EditorMode {
+		LINE, ARC, FILL
+	}
     private final TilingPanel tilingPanel;
+    private JButton arcBtn;
     private JButton fillBtn;
     private JButton lineBtn;
     private final JButton backBtn;
@@ -96,13 +102,14 @@ public class SquareTiling extends JFrame {
     private final JLabel sizeLabel;
     private final JSlider sizeSlider;
 
-    private boolean isFillMode = false;
+    private EditorMode editorMode = EditorMode.LINE;
     private final Color boundaryColor = Color.BLACK;
 
     // User Drawing Data
     private final List<DrawingAction> actionHistory = new ArrayList<>();
     private Point dragStart = null;
     private Point currentEndPoint = null;
+    private Point arcIntermediatePoint = null;
 
     public SquareTiling() {
         setTitle("Geometric Square Tiling Generator");
@@ -149,14 +156,22 @@ public class SquareTiling extends JFrame {
         topPanel.add(saveBtn);
 
         lineBtn = createIconButton("ic_line.png", e -> {
-            isFillMode = false;
+            editorMode = EditorMode.LINE;
             lineBtn.setBackground(Color.LIGHT_GRAY);
+            arcBtn.setBackground(null);
+            fillBtn.setBackground(null);
+        });
+        arcBtn = createIconButton("ic_arc.png", e -> {
+            editorMode = EditorMode.ARC;
+            arcBtn.setBackground(Color.LIGHT_GRAY);
+            lineBtn.setBackground(null);
             fillBtn.setBackground(null);
         });
         fillBtn = createIconButton("ic_fill.png", e -> {
-            isFillMode = true;
+            editorMode = EditorMode.FILL;
             fillBtn.setBackground(Color.LIGHT_GRAY);
             lineBtn.setBackground(null);
+            arcBtn.setBackground(null);
         });
         backBtn = createIconButton("ic_back.png", e -> {
             if (!actionHistory.isEmpty()) {
@@ -176,7 +191,7 @@ public class SquareTiling extends JFrame {
         helpBtn.addActionListener(e -> {
             JOptionPane.showMessageDialog(
                 SquareTiling.this,
-                "Use mouse to draw lines and fill area.\nSelect mode by clicking either the line icon or the filler icon.\nIn line mode, left click and move mouse, a ghost line is shown, release button.\nIn filler mode, left click and release.\nFiller color can be changed in the selection list.\nUndo drawings by clicking back icon.\nClear drawing area by clicking X icon.",
+                "Use mouse to draw lines, arcs or fill area.\nSelect mode by clicking either the line or arc or filler icon.\nIn line mode, left click and move mouse, a ghost line is shown, release button.\nIn arc mode, left click to set start of arc, move mouse, a ghost line is shown,\nrelease button to set end of arc; then click for an intermediate point of the arc to draw it.\nIn filler mode, left click and release. Filler color can be changed in the selection list.\nUndo drawings by clicking back icon.\nClear drawing area by clicking X icon.",
                 "Help",
                 JOptionPane.INFORMATION_MESSAGE
             );
@@ -193,6 +208,7 @@ public class SquareTiling extends JFrame {
         });
 
         topPanel.add(lineBtn);
+        topPanel.add(arcBtn);
         topPanel.add(fillBtn);
         topPanel.add(backBtn);
         topPanel.add(deleteBtn);
@@ -253,6 +269,7 @@ public class SquareTiling extends JFrame {
         if (isUserMode)//resize not allowed in user mode
             sizeSlider.setValue(150);
         lineBtn.setVisible(isUserMode);
+		arcBtn.setVisible(isUserMode);
         fillBtn.setVisible(isUserMode);
         backBtn.setVisible(isUserMode);
         deleteBtn.setVisible(isUserMode);
@@ -341,32 +358,58 @@ public class SquareTiling extends JFrame {
                 public void mousePressed(MouseEvent e) {
                     if (currentType != TileType.USER_MODE || !SwingUtilities.isLeftMouseButton(e)) return;
                     Point p = new Point(e.getX() % tileSize, e.getY() % tileSize);
-                    if (isFillMode) performFill(p);
-                    else { dragStart = p; currentEndPoint = p; }
+                    if (editorMode == EditorMode.FILL) 
+						performFill(p);
+                    else if (editorMode == EditorMode.LINE || (editorMode == EditorMode.ARC) && !waitingIntermediatePoint()) {
+						dragStart = p; currentEndPoint = p; 
+					}
                 }
                 @Override
                 public void mouseDragged(MouseEvent e) {
-                    if (currentType == TileType.USER_MODE && !isFillMode && dragStart != null) {
+                    if (currentType == TileType.USER_MODE && editorMode != EditorMode.FILL && dragStart != null) {
                         currentEndPoint = new Point(e.getX() % tileSize, e.getY() % tileSize);
                         repaint();
                     }
                 }
                 @Override
                 public void mouseReleased(MouseEvent e) {
-                    if (currentType == TileType.USER_MODE && !isFillMode && dragStart != null) {
-                        Point p = new Point(e.getX() % tileSize, e.getY() % tileSize);
-                        if (p.distance(dragStart) > 2) {
-                            actionHistory.add(new LineAction(dragStart, p, boundaryColor));
-                            clearCache();
-                        }
-                        dragStart = null; currentEndPoint = null;
-                        repaint();
+                    if (currentType == TileType.USER_MODE && editorMode != EditorMode.FILL) {
+						Point p = new Point(e.getX() % tileSize, e.getY() % tileSize);
+						if (dragStart != null) {
+							if (p.distance(dragStart) > 2) {
+								if (editorMode == EditorMode.LINE)
+									actionHistory.add(new LineAction(dragStart, p, boundaryColor));
+								else {//editorMode == EditorMode.ARC
+									actionHistory.add(new ArcAction(dragStart, p, boundaryColor));
+//									tilingPanel.setCursor(Cursor.getPredefinedCursor(Cursor.CROSSHAIR_CURSOR));
+								}
+								clearCache();
+							}
+							dragStart = null; currentEndPoint = null;
+							repaint();
+						} else if (editorMode == EditorMode.ARC) {//editorMode == EditorMode.ARC
+							if (waitingIntermediatePoint()) {
+								DrawingAction lastAction = actionHistory.get(actionHistory.size() - 1);
+								((ArcAction)lastAction).setIntermediatePoint(p);
+								clearCache();
+//								tilingPanel.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+								repaint();
+							}
+						}
                     }
                 }
             };
             addMouseListener(ma);
             addMouseMotionListener(ma);
         }
+
+		private boolean waitingIntermediatePoint() {
+			if (actionHistory.size() > 0) {
+				DrawingAction lastAction = actionHistory.get(actionHistory.size() - 1);
+				return lastAction instanceof ArcAction && ((ArcAction)lastAction).getIntermediatePoint() == null;
+			}
+			return false;
+		}
 
         private void performFill(Point p) {
             BufferedImage buffer = new BufferedImage(tileSize, tileSize, BufferedImage.TYPE_INT_ARGB);
@@ -411,7 +454,7 @@ public class SquareTiling extends JFrame {
             g2d.setPaint(tilingPaint);
             g2d.fillRect(0, 0, getWidth(), getHeight());
 
-            if (currentType == TileType.USER_MODE && !isFillMode && dragStart != null && currentEndPoint != null) {
+            if (currentType == TileType.USER_MODE && editorMode != EditorMode.FILL && dragStart != null && currentEndPoint != null) {
                 g2d.setColor(colors[1]);
                 g2d.setStroke(new BasicStroke(2f));
                 // Show the ghost line on all tiles simultaneously
@@ -457,17 +500,19 @@ public class SquareTiling extends JFrame {
             case IPATTERN3: Tiles.drawIslamicStarTile3(g2d, colors, x, y, size); break;
             case CROSSED: Tiles.drawCrossedTile(g2d, colors, x, y, size); break;
             case INTERLACED: Tiles.drawInterlacedTile(g2d, colors, x, y, size); break;
-            case TRUCHET2: Tiles.drawTruchetTile(g2d, colors, x, y, size, 2); break;
-            case TRUCHET3: Tiles.drawTruchetTile(g2d, colors, x, y, size, 3); break;
-            case TRUCHET4: Tiles.drawTruchetTile(g2d, colors, x, y, size, 4); break;
-            case LABYRINTH: Tiles.drawLabyrinthTile(g2d, colors, x, y, size); break;
-            case WANG: Tiles.drawWangTile(g2d, colors, x, y, size); break;
+            case TRUCHET2: Tiles.drawTruchetTile(g2d, colors, x, y, size, 2, size / 10.0); break;
+            case TRUCHET3: Tiles.drawTruchetTile(g2d, colors, x, y, size, 3, size / 10.0); break;
+            case TRUCHET4: Tiles.drawTruchetTile(g2d, colors, x, y, size, 4, size / 10.0); break;
+            case LABYRINTH: Tiles.drawLabyrinthTile(g2d, colors, x, y, size, size / 10.0); break;
+            case WANG: Tiles.drawWangTile(g2d, colors, x, y, size, 8); break;
             case INTERLOCK: Tiles.drawInterlockingTile(g2d, colors, x, y, size); break;
-            case BLCKFRCTL: Tiles.drawBlockFractal(g2d, colors, x, y, size); break;
-            case HLBRTFRCTL: Tiles.drawHilbertFractal(g2d, colors, x, y, size); break;
-            case OCTAGRAM1: Tiles.drawOctagramTile(g2d, colors, x, y, 0.384, size); break;
-            case OCTAGRAM2: Tiles.drawOctagramTile(g2d, colors, x, y, 0.27, size); break;
-            case OCTAGON: Tiles.drawOctagonTile(g2d, colors, x, y, size); break;
+            case BLCKFRCTL: Tiles.drawBlockFractal(g2d, colors, x, y, size, (int) (Math.log(size) / Math.log(3) - 1)); break;
+            case HLBRTFRCTL: Tiles.drawHilbertFractal(g2d, colors, x, y, size, (int) (Math.log(size) / Math.log(2) - 4)); break;
+            case GRIDSQRCIRCLE: Tiles.drawGridSquareCircles(g2d, colors, x, y, size, 6); break;
+            case OCTAGRAM1: Tiles.drawOctagramTile(g2d, colors, x, y, size, 0.384); break;
+            case OCTAGRAM2: Tiles.drawOctagramTile(g2d, colors, x, y, size, 0.27); break;
+            case OCTAGON: Tiles.drawOctagonTile(g2d, colors, x, y, size, 1.0 / (2.0 + Math.sqrt(2))); break;
+            case OCTAGON2: Tiles.drawOctagonTile(g2d, colors, x, y, size, 1.0 / (1.0 + Math.sqrt(2))); break;
             case CHECKERED: Tiles.drawCheckeredTile(g2d, colors, x, y, size); break;
             case TARTAN: Tiles.drawTartanTile(g2d, colors, x, y, size); break;
             case SQUARES: Tiles.drawSquaresTile(g2d, colors, x, y, size); break;

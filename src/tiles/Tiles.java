@@ -52,7 +52,7 @@ public class Tiles {
     }
 
     public static void drawIslamicStarTile1(Graphics2D g2d, Color[] colors,int x, int y, int size) {
-        drawOctagramTile(g2d, colors, x, y, 0.384, size);
+        drawOctagramTile(g2d, colors, x, y, size, 0.384);
 
         double cx = x + size / 2.0; double cy = y + size / 2.0;
         Path2D star = createStar(cx, cy, size * 0.287, size * 0.375, 8, Math.PI / 8);
@@ -66,6 +66,9 @@ public class Tiles {
         double cx = x + size / 2.0; double cy = y + size / 2.0;
         g2d.setColor(colors[3]);
         g2d.fillRect(x, y, size, size);
+
+		Rectangle2D boundary = new Rectangle2D.Double(0, 0, size, size);
+		g2d.setClip(boundary);
 
         Path2D star = createStar(cx, cy, size * 0.27, size * 0.5, 8, 0);
         g2d.setColor(colors[1]); g2d.fill(star);
@@ -85,6 +88,9 @@ public class Tiles {
     public static void drawIslamicStarTile3(Graphics2D g2d, Color[] colors,int x, int y, int size) {
         g2d.setColor(colors[1]);
         g2d.fillRect(x, y, size, size);
+
+		Rectangle2D boundary = new Rectangle2D.Double(0, 0, size, size);
+		g2d.setClip(boundary);
 
         double cx = x + size / 2.0; double cy = y + size / 2.0;
         float strokeSize = Math.max(1.5f, size / 80f); g2d.setStroke(new BasicStroke(strokeSize));
@@ -122,17 +128,15 @@ public class Tiles {
         g2d.setColor(colors[2]); g2d.drawOval(x, y, size, size);
     }
 
-    public static void drawLabyrinthTile(Graphics2D g2d, Color[] colors, int x, int y, int size) {
+    public static void drawLabyrinthTile(Graphics2D g2d, Color[] colors, int x, int y, int size, double cellSize) {
         g2d.setColor(colors[0]);
         g2d.fillRect(x, y, size, size);
 
         Random random = new Random(0);
 
-        float cellSize = size / 10f;
-
         g2d.setColor(colors[1]);
-        for (float i = x; i < x + size; i += cellSize) {
-            for (float j = y; j < y + size; j += cellSize) {                
+        for (double i = x; i < x + size; i += cellSize) {
+            for (double j = y; j < y + size; j += cellSize) {                
                 if (random.nextBoolean()) {
                     g2d.draw(new Line2D.Double(i, j, (i + cellSize), (j + cellSize)));
                 } else {
@@ -142,17 +146,15 @@ public class Tiles {
         }
     }
 
-    public static void drawTruchetTile(Graphics2D g2d, Color[] colors, int x, int y, int size, int type) {//type: 2 or 3
+    public static void drawTruchetTile(Graphics2D g2d, Color[] colors, int x, int y, int size, int type,  double cellSize) {//type: 2 or 3
         g2d.setColor(colors[0]);
         g2d.fillRect(x, y, size, size);
 
         Random random = new Random(0);
 
-        float cellSize = size / 10f;
-
         g2d.setColor(colors[1]);
-        for (float i = x; i < x + size; i += cellSize) {
-            for (float j = y; j < y + size; j += cellSize) {
+        for (double i = x; i < x + size; i += cellSize) {
+            for (double j = y; j < y + size; j += cellSize) {
                 int idx = random.nextInt(type);
                 if (idx == 0 || idx == 3) {
                     g2d.draw(new Arc2D.Double(i + cellSize / 2, j - cellSize / 2, cellSize, cellSize, 180, 90, Arc2D.OPEN));
@@ -170,8 +172,7 @@ public class Tiles {
         }
     }
 
-    public static void drawWangTile(Graphics2D g2d, Color[] colors,int x, int y, int size) {
-        int gridSize = 8;
+    public static void drawWangTile(Graphics2D g2d, Color[] colors,int x, int y, int size, int gridSize) {
         double tileSize = (double)size / gridSize;
         int[][][] grid = generateWangTiling(gridSize);
         for (int row = 0; row < gridSize; row++)
@@ -227,7 +228,7 @@ public class Tiles {
         return grid;
     }
 
-    public static void drawOctagramTile(Graphics2D g2d, Color[] colors,int x, int y, double factor, int size) {
+    public static void drawOctagramTile(Graphics2D g2d, Color[] colors,int x, int y, int size, double factor) {
         g2d.setColor(colors[1]);
         g2d.fillRect(x, y, size, size);
 
@@ -238,20 +239,22 @@ public class Tiles {
         g2d.draw(star);
     }
 
-    public static void drawOctagonTile(Graphics2D g2d, Color[] colors,int x, int y, int size) {
+    public static void drawOctagonTile(Graphics2D g2d, Color[] colors,int x, int y, int size, double factor) {
         g2d.setColor(colors[1]);
         g2d.fillRect(x, y, size, size);
 
         double cx = x + size / 2.0; double cy = y + size / 2.0;
-        double d = 1.0 / (3.0 + Math.sqrt(2));
-        Path2D octagon = createPolygon(cx, cy, size * d, 8, 0);
+        Path2D octagon = createPolygon(cx, cy, size * factor, 8, 0);
         g2d.setColor(colors[0]); g2d.fill(octagon);
         g2d.draw(octagon);
 
-        double offset = d * (1.0 + 1.0 / Math.sqrt(2)) * size;
+		Rectangle2D boundary = new Rectangle2D.Double(0, 0, size, size);
+		g2d.setClip(boundary);
+
+        double offset = factor * (1.0 + 1.0 / Math.sqrt(2)) * size;
         double[][] pos = {{0, offset}, {0, -offset}, {-offset, 0}, {offset, 0}};
         for (int k = 0; k < 4; k++) {
-            Path2D square = createPolygon(cx + pos[k][0], cy + pos[k][1], size * d, 4, 0);
+            Path2D square = createPolygon(cx + pos[k][0], cy + pos[k][1], size * factor, 4, 0);
             g2d.setColor(colors[3]); g2d.fill(square);
             g2d.draw(square);
         }
@@ -373,11 +376,10 @@ public class Tiles {
         g2d.fill(path);
     }
 
-    public static void drawBlockFractal(Graphics2D g2d, Color[] colors,int x, int y, int size) {
+    public static void drawBlockFractal(Graphics2D g2d, Color[] colors,int x, int y, int size, int n) {
         g2d.setColor(colors[2]);
         g2d.fillRect(x, y, size, size);
 
-        int n = (int) (Math.log(size) / Math.log(3) - 1);
         if (n < 1) n = 1;
 
         g2d.setColor(colors[1]);
@@ -395,11 +397,10 @@ public class Tiles {
         } else g2d.fillRect((int)x, (int)y, (int)size, (int)size);
     }
 
-    public static void drawHilbertFractal(Graphics2D g2d, Color[] colors,int x, int y, int size) {
+    public static void drawHilbertFractal(Graphics2D g2d, Color[] colors,int x, int y, int size, int n) {
         g2d.setColor(colors[2]);
         g2d.fillRect(x, y, size, size);
 
-        int n = (int) (Math.log(size) / Math.log(2) - 4);
         if (n < 1) n = 1;
 
         double step = size / Math.pow(2, n);
@@ -439,6 +440,59 @@ public class Tiles {
         g2d.drawLine((int) x, (int) y, (int) nx, (int) ny);
         return new double[]{nx, ny};
     }
+
+    public static void drawGridSquareCircles(Graphics2D g2d, Color[] colors,int x, int y, int size, int n) {
+        g2d.setColor(colors[3]);
+        g2d.fillRect(x, y, size, size);
+
+		int half = size / 2;
+        int tileSize = half / (n + 1);
+
+        g2d.setStroke(new BasicStroke(Math.max(1, tileSize / 12)));
+
+		drawGridSquareCircles(g2d, colors, n, tileSize, tileSize / 2, tileSize / 2, tileSize / 7, true);
+		drawGridSquareCircles(g2d, colors, n, tileSize, half + tileSize / 2, tileSize / 2, tileSize / 7, false);
+		drawGridSquareCircles(g2d, colors, n, tileSize, tileSize / 2, half + tileSize / 2, tileSize / 7, false);
+		drawGridSquareCircles(g2d, colors, n, tileSize, half + tileSize / 2, half + tileSize / 2, tileSize / 7, true);
+	}
+
+	private static void drawGridSquareCircles(Graphics2D g2d, Color[] colors, int n, int tileSize, int offset_x, int offset_y, int r, boolean mirror) {
+		Color color1 = colors[1];
+		Color color2 = colors[2];
+
+		int d = r * 2;
+        // Alternating thick grid lines
+        for (int row = 0; row <= n; row++) {
+            int y = offset_y + (row * tileSize);
+            for (int col = 0; col <= n; col++) {	
+				int x = offset_x + (col * tileSize);
+                g2d.setColor((row + col) % 2 == 0 ? color1 : color2);
+				if (col < n)
+	                g2d.drawLine(x, y, x + tileSize, y);
+				if (mirror) {
+					if (row > 0)
+						g2d.drawLine(x, y, x, y - tileSize);
+				} else {
+					if (row < n)
+						g2d.drawLine(x, y, x, y + tileSize);
+				}
+            }
+        }
+
+        // 2-sector circles at each intersection
+		boolean invert = false;
+        for (int row = 0; row <= n; row++) {
+            int centerY = offset_y + (row * tileSize);
+            for (int col = 0; col <= n; col++) {
+                int centerX = offset_x + (col * tileSize);
+                for (int angle = 0; angle < 360; angle += 180) {
+	                g2d.setColor((angle == 0) == invert ? color1 : color2);
+                    g2d.fillArc(centerX - r, centerY - r, d, d, angle + (mirror ? 135 : 45), 180);
+                }                
+				invert = !invert;
+            }
+        }
+	}
 
     public static Path2D createStar(double cx, double cy, double in, double out, int pts, double rotation) {
         Path2D p = new Path2D.Double();
