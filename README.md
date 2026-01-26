@@ -23,8 +23,33 @@ Islamic tile example:
 
 ![Screenshot](images/gallery.png)
 
-# Todo
-- Extend tiling to rectangles
-- Extend user mode with arcs
-- Improve flood fill algorithm
-- Add more tiles
+# Tilings
+The following tilings are available:
+
+| Method | Description |
+|--------|-------------|
+| `drawGreekTile` | Greek Pattern |
+| `drawIslamicStarTile1/2/3` | Layered/Quartered/Eightfold Islamic Stars |
+| `drawInterlockingTile` | Interlocking Squares |
+| `drawOctagramTile` | Large and Narrow Octagram |
+| `drawOctagonTile` | Octagons & Squares; Octagon & Rhombus |
+| `drawSquaresTile` | Squares and Rhombus |
+| `drawTartanTile` | Tartan |
+| `drawCrossedTile` | Crossed Square |
+| `drawInterlacedTile` | Interlaced Circles |
+| `drawLabyrinthTile` | Labyrinth  pattern |
+| `drawTruchetTile` | Truchet pattern #2, #3, #4 |
+| `drawWangTile` | Wang tiling |
+| `drawBlockFractal` | Block fractal |
+| `drawHilbertFractal` | Hilbert fractal |
+| `drawGridSquareCircles` | Grid Squares & Circles |
+| `drawCheckeredTile` | Checkered |
+
+
+# Usage
+Methods described in previous sections requires Java AWT. These methods are static and can be invoked as in the following example:
+```java
+Tiles.drawGreekTile(g2d, colors, x, y, size);
+```
+Where *g2d* is a reference to Graphics2D, *x* and *y* are the origin for the tile, *size* is the size of square tile. Some methods may have additional parameters to control specific features of the tile.
+
