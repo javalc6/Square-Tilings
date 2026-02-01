@@ -42,6 +42,7 @@ The following tilings are available:
 | `drawWangTile` | Wang tiling |
 | `drawBlockFractal` | Block Fractal |
 | `drawHilbertFractal` | Hilbert Fractal |
+| `drawFractalPolygon` | Polygon Fractal |
 | `drawGridSquareCircles` | Grid Squares & Circles |
 | `drawSquareSpiralTile` | Square Spiral |
 | `drawSpiderWebTile` | Spider Web |
