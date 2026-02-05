@@ -1,7 +1,7 @@
 # Introduction
 The *SquareTiling* application provides an interactive graphical interface to visualize periodic tilings composed of repeated square-based geometric patterns. 
 
-*SquareTiling* includes tiles like Greek key, Islamic stars, octagons, checkers, fractals, Truchet patterns, Wang tiling, tartan and interlaced motifs, which can be tiled across the application panel in real time. 
+*SquareTiling* includes tiles like Greek key, Islamic stars, octagons, checkers, fractals, Truchet patterns, Wang and Voronoi tilings, tartan and interlaced motifs, which can be tiled across the application panel in real time. 
 
 You can adjust tile size, choose from four customizable colors, preview individual tiles, export the resulting tiling as a PNG image and view the gallery of implemented tiles. All tiles are implemented using standard Java 2D classes.
 
@@ -40,6 +40,7 @@ The following tilings are available:
 | `drawLabyrinthTile` | Labyrinth  pattern |
 | `drawTruchetTile` | Truchet pattern #2, #3, #4 |
 | `drawWangTile` | Wang tiling |
+| `drawVoronoiTile` | Voronoi tiling |
 | `drawBlockFractal` | Block Fractal |
 | `drawHilbertFractal` | Hilbert Fractal |
 | `drawFractalPolygon` | Polygon Fractal |
