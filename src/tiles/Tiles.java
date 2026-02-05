@@ -23,7 +23,9 @@ The use of this software is at the risk of the user.
 DO NOT USE THIS SOFTWARE IF YOU DON'T AGREE WITH STATED CONDITIONS.
 */
 import java.awt.*;
+import java.awt.geom.AffineTransform;
 import java.awt.geom.Arc2D;
+import java.awt.geom.Area;
 import java.awt.geom.Line2D;
 import java.awt.geom.Path2D;
 import java.awt.geom.Point2D;
@@ -31,6 +33,8 @@ import java.awt.geom.Rectangle2D;
 import java.awt.geom.RoundRectangle2D;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Random;
 
 /*
@@ -465,7 +469,7 @@ public class Tiles {
     private static void drawPolygonFractal(Graphics2D g2d, Color[] colors, ArrayList<Point2D> outer, int depth, double reductionFactor) {
         if (depth == 0) return;
 
-		double sumX = 0, sumY = 0;
+        double sumX = 0, sumY = 0;
         for (Point2D p : outer) {
             sumX += p.getX();
             sumY += p.getY();
@@ -478,12 +482,12 @@ public class Tiles {
             inner.add(new Point2D.Double(x, y));
         }
 
-        g2d.setColor(colors[1]); 
+        g2d.setColor(colors[1]);
         for (int i = 0; i < outer.size(); i++) {
             Point2D p1 = outer.get(i);
             Point2D p2 = inner.get(i);
             g2d.drawLine((int) p1.getX(), (int) p1.getY(), (int) p2.getX(), (int) p2.getY());
-            
+
             Point2D nextOuter = outer.get((i + 1) % outer.size());
             Point2D nextInner = inner.get((i + 1) % inner.size());
             g2d.drawLine((int) p1.getX(), (int) p1.getY(), (int) nextOuter.getX(), (int) nextOuter.getY());
@@ -498,7 +502,7 @@ public class Tiles {
             trapezoid.add(outer.get((i + 1) % outer.size()));
             trapezoid.add(inner.get((i + 1) % inner.size()));
             trapezoid.add(inner.get(i));
-            
+
             drawPolygonFractal(g2d, colors, trapezoid, depth - 1, reductionFactor);
         }
     }
@@ -599,10 +603,10 @@ public class Tiles {
             double cos = Math.cos(angle);
             double sin = Math.sin(angle);
 
-			double dist = Math.min(
-				Math.abs(cos) > 1e-9 ? r / Math.abs(cos) : Double.POSITIVE_INFINITY,
-				Math.abs(sin) > 1e-9 ? r / Math.abs(sin) : Double.POSITIVE_INFINITY
-			);
+            double dist = Math.min(
+                Math.abs(cos) > 1e-9 ? r / Math.abs(cos) : Double.POSITIVE_INFINITY,
+                Math.abs(sin) > 1e-9 ? r / Math.abs(sin) : Double.POSITIVE_INFINITY
+            );
 
             g2d.drawLine((int)cx, (int)cy, (int) (cx + cos * dist), (int) (cy + sin * dist));
 
@@ -618,6 +622,45 @@ public class Tiles {
                 int y2 = (int) (cy + sin2 * currentRadius);
 
                 g2d.drawLine(x1, y1, x2, y2);
+            }
+        }
+    }
+
+    public static void drawVoronoiTile(Graphics2D g2d, int x, int y, int size, int n_seeds) {
+        final Point2D.Double[] seeds = new Point2D.Double[n_seeds];
+        final Color[] colors = new Color[n_seeds];
+
+        Random rand = new Random(0);
+
+        for (int i = 0; i < n_seeds; i++) {
+            seeds[i] = new Point2D.Double(rand.nextInt(size), rand.nextInt(size));
+            colors[i] = new Color(rand.nextInt(0x1000000));
+        }
+
+        final Path2D[] cells = new Path2D[n_seeds];
+        for (int i = 0; i < n_seeds; i++)
+            cells[i] = createPeriodicVoronoiCell(seeds, i, size);
+
+        final AffineTransform[] tileTransforms = new AffineTransform[9];
+        int idx = 0;
+        for (int row = -1; row <= 1; row++)
+            for (int col = -1; col <= 1; col++)
+                tileTransforms[idx++] = AffineTransform.getTranslateInstance(col * size, row * size);
+
+        Rectangle2D clipRect = new Rectangle2D.Double(0, 0, size, size);
+        Area clipArea = new Area(clipRect);
+
+        for (int i = 0; i < n_seeds; i++) {
+            g2d.setColor(colors[i]);
+            for (AffineTransform transform : tileTransforms) {
+                Shape transformedCell = transform.createTransformedShape(cells[i]);
+                if (transformedCell.intersects(clipRect)) {
+                    Area clippedCell = new Area(transformedCell);
+                    clippedCell.intersect(clipArea);
+
+                    g2d.fill(clippedCell);
+                    g2d.draw(clippedCell);
+                }
             }
         }
     }
@@ -692,6 +735,94 @@ public class Tiles {
             points.add(new Point2D.Double(x + radius * Math.cos(angle), y + radius * Math.sin(angle)));
         }
         return points;
+    }
+
+//utility methods for Voronoi tiles
+    private static Path2D createPeriodicVoronoiCell(Point2D.Double[] seeds, int index, int size) {
+        List<Point2D.Double> polygon = new ArrayList<>(Arrays.asList(
+            new Point2D.Double(-size, -size),
+            new Point2D.Double(2 * size, -size),
+            new Point2D.Double(2 * size, 2 * size),
+            new Point2D.Double(-size, 2 * size)
+        ));
+
+        Point2D.Double target = seeds[index];
+
+        for (int ox = -1; ox <= 1; ox++) {
+            for (int oy = -1; oy <= 1; oy++) {
+                for (int j = 0; j < seeds.length; j++) {
+                    if (ox == 0 && oy == 0 && j == index) continue;
+
+                    double neighborX = seeds[j].getX() + ox * size;
+                    double neighborY = seeds[j].getY() + oy * size;
+
+                    double mx = (target.x + neighborX) * 0.5;
+                    double my = (target.y + neighborY) * 0.5;
+                    double nx = neighborX - target.x;
+                    double ny = neighborY - target.y;
+
+                    polygon = clipPolygon(polygon, mx, my, nx, ny);
+                }
+            }
+        }
+
+        Path2D.Double path = new Path2D.Double();
+        if (!polygon.isEmpty()) {
+            Point2D.Double first = polygon.get(0);
+            path.moveTo(first.x, first.y);
+            for (int i = 1; i < polygon.size(); i++) {
+                Point2D.Double p = polygon.get(i);
+                path.lineTo(p.x, p.y);
+            }
+            path.closePath();
+        }
+        return path;
+    }
+
+    private static List<Point2D.Double> clipPolygon(List<Point2D.Double> polygon,
+                                            double mx, double my, double nx, double ny) {
+        List<Point2D.Double> result = new ArrayList<>();
+        int size = polygon.size();
+
+        if (size > 0) {
+            Point2D.Double prev = polygon.get(size - 1);
+            boolean prevInside = isInside(prev, mx, my, nx, ny);
+
+            for (int i = 0; i < size; i++) {
+                Point2D.Double curr = polygon.get(i);
+                boolean currInside = isInside(curr, mx, my, nx, ny);
+
+                if (currInside) {
+                    if (!prevInside)
+                        result.add(intersect(prev, curr, mx, my, nx, ny));
+                    result.add(curr);
+                } else if (prevInside)
+                    result.add(intersect(prev, curr, mx, my, nx, ny));
+
+                prev = curr;
+                prevInside = currInside;
+            }
+        }
+        return result;
+    }
+
+    private static boolean isInside(Point2D.Double p, double mx, double my, double nx, double ny) {
+        return (p.x - mx) * nx + (p.y - my) * ny <= 0;
+    }
+
+    private static Point2D.Double intersect(Point2D.Double p1, Point2D.Double p2,
+                                    double mx, double my, double nx, double ny) {
+        double dx = p2.x - p1.x;
+        double dy = p2.y - p1.y;
+        double denom = dx * nx + dy * ny;
+
+        if (Math.abs(denom) < 1e-10)
+            return new Point2D.Double(p1.x, p1.y);
+
+        double t = ((mx - p1.x) * nx + (my - p1.y) * ny) / denom;
+        t = Math.max(0, Math.min(1, t));
+
+        return new Point2D.Double(p1.x + t * dx, p1.y + t * dy);
     }
 
 }

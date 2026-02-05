@@ -67,6 +67,7 @@ public class SquareTiling extends JFrame {
         TRUCHET3("Truchet pattern #3"),
         TRUCHET4("Truchet pattern #4"),
         WANG("Wang tiling"),
+        VORONOI("Voronoi tiling"),
         BLCKFRCTL("Block Fractal"),
         HLBRTFRCTL("Hilbert Fractal"),
         POLYGONFRCTL("Polygon Fractal"),
@@ -515,6 +516,7 @@ public class SquareTiling extends JFrame {
             case TRUCHET3: Tiles.drawTruchetTile(g2d, colors, x, y, size, 3, size / 10.0); break;
             case TRUCHET4: Tiles.drawTruchetTile(g2d, colors, x, y, size, 4, size / 10.0); break;
             case WANG: Tiles.drawWangTile(g2d, colors, x, y, size, 8); break;
+            case VORONOI: Tiles.drawVoronoiTile(g2d, x, y, size, 40); break;
             case BLCKFRCTL: Tiles.drawBlockFractal(g2d, colors, x, y, size, (int) (Math.log(size) / Math.log(3) - 1)); break;
             case HLBRTFRCTL: Tiles.drawHilbertFractal(g2d, colors, x, y, size, (int) (Math.log(size) / Math.log(2) - 4)); break;
             case POLYGONFRCTL: Tiles.drawFractalPolygon(g2d, colors, x, y, size, 8, 3, 0.4); break;
