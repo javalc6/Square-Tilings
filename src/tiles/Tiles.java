@@ -665,6 +665,47 @@ public class Tiles {
         }
     }
 
+    public static void drawDottedGridTile(Graphics2D g2d, Color[] colors, int x, int y, int size, int n) {
+        g2d.setColor(colors[0]);
+        g2d.fillRect(x, y, size, size);
+
+		int splitLayer = 1;
+
+		double gap = size * 0.25 / n;
+		double d = 3 * gap;
+
+        for (int row = 0; row < n; row++) {
+            for (int col = 0; col < n; col++) {
+                double xx = x + gap / 2 + col * (d + gap);
+                double yy = y + gap / 2 + row * (d + gap);
+
+                int layer = Math.min(Math.min(row, col), Math.min(n - 1 - row, n - 1 - col));
+
+				g2d.setColor(layer > splitLayer ? colors[1] : colors[2]);
+				g2d.fill(new Arc2D.Double(xx, yy, d, d, 0, 360, Arc2D.PIE));
+
+                if (layer == splitLayer) {
+					boolean isTop = (row == layer);
+					boolean isBottom = (row == n - 1 - layer);
+					boolean isLeft = (col == layer);
+					boolean isRight = (col == n - 1 - layer);
+
+					double startAngle;
+					if (isBottom && isLeft) startAngle = 0;
+					else if (isBottom) startAngle = isRight ? 90 : 0;
+					else if (isTop && isRight) startAngle = 180;
+					else if (isTop) startAngle = isLeft ? 270 : 180;
+					else startAngle = isLeft ? 270 : 90;
+
+					double extent = ((isTop || isBottom) && (isLeft || isRight)) ? 90 : 180;
+
+					g2d.setColor(colors[1]);
+					g2d.fill(new Arc2D.Double(xx, yy, d, d, startAngle, extent, Arc2D.PIE));
+                }
+            }
+        }
+    }
+
     public static Path2D createStar(double cx, double cy, double in, double out, int pts, double rotation) {
         Path2D p = new Path2D.Double();
         for (int i = 0; i < 2 * pts; i++) {

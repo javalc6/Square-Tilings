@@ -72,6 +72,7 @@ public class SquareTiling extends JFrame {
         HLBRTFRCTL("Hilbert Fractal"),
         POLYGONFRCTL("Polygon Fractal"),
         GRIDSQRCIRCLE("Grid Squares & Circles"),
+        DOTTEDGRID("Dotted grid"),
         SQRSPIRAL("Square Spiral"),
         SPIDERWEB("Spider Web"),
         CHECKERED("Checkered");
@@ -521,6 +522,7 @@ public class SquareTiling extends JFrame {
             case HLBRTFRCTL: Tiles.drawHilbertFractal(g2d, colors, x, y, size, (int) (Math.log(size) / Math.log(2) - 4)); break;
             case POLYGONFRCTL: Tiles.drawFractalPolygon(g2d, colors, x, y, size, 8, 3, 0.4); break;
             case GRIDSQRCIRCLE: Tiles.drawGridSquareCircles(g2d, colors, x, y, size, 6); break;
+            case DOTTEDGRID: Tiles.drawDottedGridTile(g2d, colors, x, y, size, 10); break;
             case SQRSPIRAL: Tiles.drawSquareSpiralTile(g2d, colors, x, y, size, 10); break;
             case SPIDERWEB: Tiles.drawSpiderWebTile(g2d, colors, x, y, size, 16, 8); break;
             case CHECKERED: Tiles.drawCheckeredTile(g2d, colors, x, y, size); break;
